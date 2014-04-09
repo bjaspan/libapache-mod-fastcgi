@@ -375,6 +375,8 @@ int fcgi_protocol_dequeue(pool *p, fcgi_request *fr)
          */
         len = min(fr->dataLen, BufferLength(fr->serverInputBuffer));
         ASSERT(len >= 0);
+	ap_log_rerror(FCGI_LOG_WARN_NOERRNO, fr->r,
+		      "FastCGI: got packet type %d", fr->packetType);
         switch (fr->packetType) {
             case FCGI_STDOUT:
                 if (len > 0) {

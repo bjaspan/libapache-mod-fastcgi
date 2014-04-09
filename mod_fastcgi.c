@@ -2074,6 +2074,7 @@ SERVER_SEND:
 
             if (! is_connected) 
             {
+		ap_log_rerror(FCGI_LOG_WARN_NOERRNO, r, "req %d, opening connection", fr->requestId);
                 if (open_connection_to_fs(fr) != FCGI_OK) 
                 {
                     ap_kill_timeout(r);
@@ -2274,7 +2275,7 @@ SERVER_SEND:
 		struct timeval now, qwait;
 		fcgi_util_ticks(&now);
 		timersub(&now, &fr->startTime, &qwait);
-		ap_log_rerror(FCGI_LOG_WARN_NOERRNO, r, "queue wait time: %ld.%06ld", qwait.tv_sec, qwait.tv_usec);
+		ap_log_rerror(FCGI_LOG_WARN_NOERRNO, r, "req %d, queue wait time: %ld.%06ld", fr->requestId, qwait.tv_sec, qwait.tv_usec);
 		report_queue_wait = 0;
 	    }
 
@@ -2323,6 +2324,8 @@ SERVER_SEND:
             state = STATE_ERROR;
             break;
         }
+
+	ap_log_rerror(FCGI_LOG_WARN_NOERRNO, r, "req %d, read packetType %d", fr->requestId, fr->packetType);
         
         if (fr->parseHeader == SCAN_CGI_READING_HEADERS) 
         {
