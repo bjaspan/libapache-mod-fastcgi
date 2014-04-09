@@ -1377,9 +1377,7 @@ static int open_connection_to_fs(fcgi_request *fr)
         set_nonblocking(fr, TRUE);
     }
 
-    if (fr->dynamic) {
-        fcgi_util_ticks(&fr->startTime);
-    }
+    fcgi_util_ticks(&fr->startTime);
 
     /* Connect */
     do {
@@ -2009,7 +2007,7 @@ static int socket_io(fcgi_request * const fr)
     int client_recv = FALSE;
     env_status env;
     pool *rp = r->pool;
-    int is_connected = 0;
+    int is_connected = 0, report_queue_wait = 0;
     
     dynamic_last_io_time.tv_sec = 0;
     dynamic_last_io_time.tv_usec = 0;
@@ -2084,6 +2082,7 @@ SERVER_SEND:
 
                 set_nonblocking(fr, TRUE);
                 is_connected = 1;
+		report_queue_wait = 1;
                 nfds = fr->fd + 1;
             }
 
@@ -2251,6 +2250,14 @@ SERVER_SEND:
                 state = STATE_ERROR;
             }
         }
+
+	if (report_queue_wait) {
+	    struct timeval now, qwait;
+	    fcgi_util_ticks(&now);
+	    timersub(&now, &fr->startTime, &qwait);
+	    ap_log_rerror(FCGI_LOG_WARN_NOERRNO, r, "queue wait time: %ld.%06ld", qwait.tv_sec, qwait.tv_usec);
+	    report_queue_wait = 0;
+	}
 
         if (FD_ISSET(fr->fd, &write_set))
         {
