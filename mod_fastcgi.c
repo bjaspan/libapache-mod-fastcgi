@@ -2271,12 +2271,11 @@ SERVER_SEND:
         {
             /* recv from the server */
 
-	    if (report_queue_wait) {
+	    if (1) {
 		struct timeval now, qwait;
 		fcgi_util_ticks(&now);
 		timersub(&now, &fr->startTime, &qwait);
-		ap_log_rerror(FCGI_LOG_WARN_NOERRNO, r, "req %s, queue wait time: %ld.%06ld", fr->r->uri, qwait.tv_sec, qwait.tv_usec);
-		report_queue_wait = 0;
+		ap_log_rerror(FCGI_LOG_WARN_NOERRNO, r, "req %s, isset wait: %ld.%06ld", fr->r->uri, qwait.tv_sec, qwait.tv_usec);
 	    }
 
             if (dynamic_first_recv) 
@@ -2286,6 +2285,14 @@ SERVER_SEND:
             }
 
             rv = fcgi_buf_socket_recv(fr->serverInputBuffer, fr->fd);
+
+	    if (1) {
+		struct timeval now, qwait;
+		fcgi_util_ticks(&now);
+		timersub(&now, &fr->startTime, &qwait);
+		ap_log_rerror(FCGI_LOG_WARN_NOERRNO, r, "req %s, recv wait (%d): %ld.%06ld", rv, fr->r->uri, qwait.tv_sec, qwait.tv_usec);
+	    }
+	    
 
             if (rv < 0) 
             {
@@ -2327,6 +2334,13 @@ SERVER_SEND:
 
 	ap_log_rerror(FCGI_LOG_WARN_NOERRNO, r, "req %s, read packetType %d", fr->r->uri, fr->packetType);
         
+	if (1) {
+	    struct timeval now, qwait;
+	    fcgi_util_ticks(&now);
+	    timersub(&now, &fr->startTime, &qwait);
+	    ap_log_rerror(FCGI_LOG_WARN_NOERRNO, r, "req %s, dequeue wait: %ld.%06ld", fr->r->uri, qwait.tv_sec, qwait.tv_usec);
+	}
+
         if (fr->parseHeader == SCAN_CGI_READING_HEADERS) 
         {
             const char * err = process_headers(r, fr);
