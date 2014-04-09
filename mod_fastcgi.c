@@ -2251,14 +2251,6 @@ SERVER_SEND:
             }
         }
 
-	if (report_queue_wait) {
-	    struct timeval now, qwait;
-	    fcgi_util_ticks(&now);
-	    timersub(&now, &fr->startTime, &qwait);
-	    ap_log_rerror(FCGI_LOG_WARN_NOERRNO, r, "queue wait time: %ld.%06ld", qwait.tv_sec, qwait.tv_usec);
-	    report_queue_wait = 0;
-	}
-
         if (FD_ISSET(fr->fd, &write_set))
         {
             /* send to the server */
@@ -2277,6 +2269,14 @@ SERVER_SEND:
         if (FD_ISSET(fr->fd, &read_set)) 
         {
             /* recv from the server */
+
+	    if (report_queue_wait) {
+		struct timeval now, qwait;
+		fcgi_util_ticks(&now);
+		timersub(&now, &fr->startTime, &qwait);
+		ap_log_rerror(FCGI_LOG_WARN_NOERRNO, r, "queue wait time: %ld.%06ld", qwait.tv_sec, qwait.tv_usec);
+		report_queue_wait = 0;
+	    }
 
             if (dynamic_first_recv) 
             {
